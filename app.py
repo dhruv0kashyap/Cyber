@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, Text, Scrollbar, VERTICAL, RIGHT, Y
 from tkinter.ttk import Progressbar
 import os
+import time  # Import the time module
 
 class VirusScannerApp:
     def __init__(self, root):
@@ -9,6 +10,9 @@ class VirusScannerApp:
         self.root.title("Virus Scanner")
         self.root.geometry("800x600")
         self.root.config(bg="#2c3e50")
+        
+        self.loading_text = None
+        self.loading = False
         
         self.create_widgets()
 
@@ -49,7 +53,21 @@ class VirusScannerApp:
     def directory_open(self):
         directory_path = filedialog.askdirectory()
         if directory_path:
-            self.scan_directory(directory_path)
+            self.loading = True
+            self.loading_text = tk.Label(self.main_frame, text="Scanning, please wait...", font=("Arial", 14), bg="#ecf0f1", fg="#2c3e50")
+            self.loading_text.pack(pady=10)
+            self.root.after(100, self.animate_loading)
+            self.root.after(500, lambda: self.scan_directory(directory_path))
+        
+    def animate_loading(self):
+        if self.loading:
+            current_text = self.loading_text.cget("text")
+            if current_text.endswith("..."):
+                new_text = "Scanning, please wait"
+            else:
+                new_text = current_text + "."
+            self.loading_text.config(text=new_text)
+            self.root.after(500, self.animate_loading)
         
     def scan_directory(self, directory_path):
         self.progress_bar["value"] = 0
@@ -63,8 +81,12 @@ class VirusScannerApp:
                 self.scan_file(file_path)
                 scanned_files += 1
                 self.update_progress(scanned_files, total_files)
+        
+        self.loading = False
+        self.loading_text.destroy()
     
     def scan_file(self, file_path):
+        time.sleep(3)  # Add delay of 3 seconds
         with open(file_path, "rb") as f:
             file_content = f.read()
             virus_signature = b"X0/2132fkiubwjn9we8phffjffiywhnwo;inv0w8hgfnwekp"
